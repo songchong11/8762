@@ -23,6 +23,8 @@
 #define GPIO_OUTPUT_PIN_0       P0_1
 #define GPIO_PIN_OUTPUT         GPIO_GetPin(GPIO_OUTPUT_PIN_0)
 
+#define GPIO_OUTPUT_PIN_2       P0_2
+#define GPIO_PIN_OUTPUT_2       GPIO_GetPin(GPIO_OUTPUT_PIN_2)
 /**
   * @brief  Initialization of pinmux settings and pad settings.
   * @param  No parameter.
@@ -30,10 +32,13 @@
   */
 void board_gpio_init(void)
 {
-    Pad_Config(GPIO_OUTPUT_PIN_0, PAD_PINMUX_MODE, PAD_IS_PWRON, PAD_PULL_NONE, PAD_OUT_ENABLE,
+    Pad_Config(GPIO_OUTPUT_PIN_0 , PAD_PINMUX_MODE, PAD_IS_PWRON, PAD_PULL_NONE, PAD_OUT_ENABLE,
+               PAD_OUT_HIGH);
+	  Pad_Config(GPIO_OUTPUT_PIN_2 , PAD_PINMUX_MODE, PAD_IS_PWRON, PAD_PULL_NONE, PAD_OUT_ENABLE,
                PAD_OUT_HIGH);
 
     Pinmux_Config(GPIO_OUTPUT_PIN_0, DWGPIO);
+		Pinmux_Config(GPIO_OUTPUT_PIN_2, DWGPIO);
 }
 
 /**
@@ -49,6 +54,11 @@ void driver_gpio_init(void)
     GPIO_InitTypeDef GPIO_InitStruct;
     GPIO_StructInit(&GPIO_InitStruct);
     GPIO_InitStruct.GPIO_Pin    = GPIO_PIN_OUTPUT;
+    GPIO_InitStruct.GPIO_Mode   = GPIO_Mode_OUT;
+    GPIO_InitStruct.GPIO_ITCmd  = DISABLE;
+    GPIO_Init(&GPIO_InitStruct);
+	
+	  GPIO_InitStruct.GPIO_Pin    = GPIO_PIN_OUTPUT_2;
     GPIO_InitStruct.GPIO_Mode   = GPIO_Mode_OUT;
     GPIO_InitStruct.GPIO_ITCmd  = DISABLE;
     GPIO_Init(&GPIO_InitStruct);
@@ -83,10 +93,13 @@ int main(void)
     {
         /* Light up LED0 */
         GPIO_WriteBit(GPIO_PIN_OUTPUT, (BitAction)(1));
-        for (uint32_t i = 0; i < 100000; i++);
+				GPIO_WriteBit(GPIO_PIN_OUTPUT_2, (BitAction)(1));
+        for (uint32_t i = 0; i < 10000000; i++);
+				
         /* Lights out LED0 */
         GPIO_WriteBit(GPIO_PIN_OUTPUT, (BitAction)(0));
-        for (uint32_t i = 0; i < 100000; i++);
+				GPIO_WriteBit(GPIO_PIN_OUTPUT_2, (BitAction)(0));
+        for (uint32_t i = 0; i < 10000000; i++);
     }
 }
 
