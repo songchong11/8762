@@ -169,6 +169,7 @@ void uart_demo(void)
                 UART_Recv_Buf[i] = 0;
             }
             UART_Recv_Buf_Lenth = 0;
+						DBG_DIRECT("receive\n");
         }
     }
 }
