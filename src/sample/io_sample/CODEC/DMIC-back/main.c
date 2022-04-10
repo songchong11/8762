@@ -92,6 +92,7 @@ void driver_codec_init(void)
     CODEC_InitStruct.CODEC_SampleRate       = SAMPLE_RATE_16KHz;
     CODEC_InitStruct.CODEC_I2SFormat        = CODEC_I2S_DataFormat_I2S;
     CODEC_InitStruct.CODEC_I2SDataWidth     = CODEC_I2S_DataWidth_16Bits;
+		CODEC_InitStruct.CODEC_Ch0AdGain =  3;
     CODEC_Init(CODEC, &CODEC_InitStruct);
     DBG_DIRECT("Use dmic test!");
 }
@@ -136,6 +137,7 @@ void driver_uart_init(void)
     UART_InitStruct.UART_Div             = 1;
     UART_InitStruct.UART_Ovsr            = 8;
     UART_InitStruct.UART_OvsrAdj        = 0x492;
+		//UART_InitStruct.UART_OvsrAdj        = 0x292;
     UART_InitStruct.UART_TxWaterLevel    = 12;
 #else
     /* change to 1M baudrate */

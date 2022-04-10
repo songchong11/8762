@@ -36,13 +36,45 @@
 #define GDMA_RX_BURST_SIZE              ((uint32_t)1)
 
 /* Audio operation ---------------------------------------------*/
-#define AUDIO_FRAME_SIZE                4000
+#define AUDIO_FRAME_SIZE                512 * 1//4000
 
 /* GDMA RX defines */
 #define GDMA_Channel_DMIC_NUM           0
 #define GDMA_Channel_DMIC               GDMA_Channel0
 #define GDMA_Channel_DMIC_IRQn          GDMA0_Channel0_IRQn
 #define GDMA_Channel_DMIC_Handler       GDMA0_Channel0_Handler
+
+/********************************add by sc*******************************/
+#define CODEC_EQ_MAX_NUM 5
+
+static CODEC_EQTypeDef *const CODEC_EQ_CH0_TABLE[CODEC_EQ_MAX_NUM] =
+{CODEC_CH0_EQ1, CODEC_CH0_EQ2, CODEC_CH0_EQ3, CODEC_CH0_EQ4, CODEC_CH0_EQ5};
+
+static const unsigned int CODEC_EQ_CH0_DEFAULT_PARAMS[CODEC_EQ_MAX_NUM][6] =
+{
+    /* CODEC_EQChCmd, CODEC_EQCoefH0, CODEC_EQCoefB1, CODEC_EQCoefB2, CODEC_EQCoefA1, CODEC_EQCoefA2 */
+    {EQ_CH_DISABLE, 0, 0, 0, 0, 0},  /* CODEC_EQ1 */
+    {EQ_CH_DISABLE, 0, 0, 0, 0, 0},  /* CODEC_EQ2 */
+    {EQ_CH_DISABLE, 0, 0, 0, 0, 0},  /* CODEC_EQ3 */
+    {EQ_CH_DISABLE, 0, 0, 0, 0, 0},  /* CODEC_EQ4 */
+    {EQ_CH_DISABLE, 0, 0, 0, 0, 0},  /* CODEC_EQ5 */
+};
+
+static CODEC_EQTypeDef *const CODEC_EQ_CH1_TABLE[CODEC_EQ_MAX_NUM] =
+{CODEC_CH1_EQ1, CODEC_CH1_EQ2, CODEC_CH1_EQ3, CODEC_CH1_EQ4, CODEC_CH1_EQ5};
+
+static const unsigned int CODEC_EQ_CH1_DEFAULT_PARAMS[CODEC_EQ_MAX_NUM][6] =
+{
+    /* CODEC_EQChCmd, CODEC_EQCoefH0, CODEC_EQCoefB1, CODEC_EQCoefB2, CODEC_EQCoefA1, CODEC_EQCoefA2 */
+    {EQ_CH_DISABLE, 0, 0, 0, 0, 0},  /* CODEC_EQ1 */
+    {EQ_CH_DISABLE, 0, 0, 0, 0, 0},  /* CODEC_EQ2 */
+    {EQ_CH_DISABLE, 0, 0, 0, 0, 0},  /* CODEC_EQ3 */
+    {EQ_CH_DISABLE, 0, 0, 0, 0, 0},  /* CODEC_EQ4 */
+    {EQ_CH_DISABLE, 0, 0, 0, 0, 0},  /* CODEC_EQ5 */
+};
+/********************************dual feature*******************************/
+
+
 
 /**
   * @brief  Initialization of pinmux settings and pad settings.
@@ -86,14 +118,59 @@ void driver_codec_init(void)
     CODEC_InitTypeDef CODEC_InitStruct;
 
     CODEC_StructInit(&CODEC_InitStruct);
-    CODEC_InitStruct.CODEC_Ch0MicType       = CODEC_CH0_DMIC;
-    CODEC_InitStruct.CODEC_DmicClock        = DMIC_Clock_2500KHz;
-    CODEC_InitStruct.CODEC_Ch0DmicDataLatch = DMIC_Ch0_Rising_Latch;
-    CODEC_InitStruct.CODEC_SampleRate       = SAMPLE_RATE_16KHz;
-    CODEC_InitStruct.CODEC_I2SFormat        = CODEC_I2S_DataFormat_I2S;
-    CODEC_InitStruct.CODEC_I2SDataWidth     = CODEC_I2S_DataWidth_16Bits;
+    /* Basic parameters section */
+	CODEC_InitStruct.CODEC_SampleRate = SAMPLE_RATE_16KHz;
+    CODEC_InitStruct.CODEC_DmicClock = DMIC_Clock_2500KHz;
+    CODEC_InitStruct.CODEC_I2SFormat = CODEC_I2S_DataFormat_I2S;//sc
+    CODEC_InitStruct.CODEC_I2SDataWidth = CODEC_I2S_DataWidth_16Bits;//sc
+    CODEC_InitStruct.CODEC_I2SChSequence = CODEC_I2S_CH_L_R;
+    CODEC_InitStruct.CODEC_MicBIAS = MICBIAS_VOLTAGE_1_8;
+
+    /* MIC channel 0 initialization parameters section */
+    CODEC_InitStruct.CODEC_Ch0Mute = CODEC_CH0_UNMUTE;
+    CODEC_InitStruct.CODEC_Ch0MicType = CODEC_CH0_DMIC;
+    CODEC_InitStruct.CODEC_Ch0DmicDataLatch = DMIC_Ch0_Falling_Latch;//DMIC_Ch0_Rising_Latch;
+    CODEC_InitStruct.CODEC_Ch0AdGain =  0x0a;  /* 0x2F - 0dB, step 0.375dB, range -17.625dB ~ 30dB */
+    CODEC_InitStruct.CODEC_Ch0BoostGain = Ch0_Boost_Gain_0dB;
+    CODEC_InitStruct.CODEC_Ch0ZeroDetTimeout = Ch0_ADC_Zero_DetTimeout_1024_32_Sample;
+
+    /* MIC channel 1 initialization parameters section */
+    CODEC_InitStruct.CODEC_Ch1Mute = CODEC_CH1_UNMUTE;
+    CODEC_InitStruct.CODEC_Ch1MicType = CODEC_CH1_DMIC;
+    CODEC_InitStruct.CODEC_Ch1DmicDataLatch = DMIC_Ch1_Rising_Latch;//DMIC_Ch1_Falling_Latch;
+    CODEC_InitStruct.CODEC_Ch1AdGain = 0x0a;  /* 0x2F - 0dB, step 0.375dB, range -17.625dB ~ 30dB */
+    CODEC_InitStruct.CODEC_Ch1BoostGain = Ch1_Boost_Gain_0dB;
+    CODEC_InitStruct.CODEC_Ch1ZeroDetTimeout = Ch1_ADC_Zero_DetTimeout_1024_32_Sample;
+	
     CODEC_Init(CODEC, &CODEC_InitStruct);
-    DBG_DIRECT("Use dmic test!");
+	/* control mic bias */
+	CODEC_MICBIASCmd(CODEC, DISABLE);
+
+	#if 0
+	/* init codec EQ parameters */
+	for (unsigned char eq_index = 0; eq_index < CODEC_EQ_MAX_NUM; eq_index++)
+	{
+			CODEC_EQInitTypeDef codec_eq_params;
+			CODEC_EQStructInit(&codec_eq_params);
+
+			codec_eq_params.CODEC_EQChCmd = CODEC_EQ_CH0_DEFAULT_PARAMS[eq_index][0];
+			codec_eq_params.CODEC_EQCoefH0 = CODEC_EQ_CH0_DEFAULT_PARAMS[eq_index][1];;
+			codec_eq_params.CODEC_EQCoefB1 = CODEC_EQ_CH0_DEFAULT_PARAMS[eq_index][2];;
+			codec_eq_params.CODEC_EQCoefB2 = CODEC_EQ_CH0_DEFAULT_PARAMS[eq_index][3];;
+			codec_eq_params.CODEC_EQCoefA1 = CODEC_EQ_CH0_DEFAULT_PARAMS[eq_index][4];;
+			codec_eq_params.CODEC_EQCoefA2 = CODEC_EQ_CH0_DEFAULT_PARAMS[eq_index][5];;
+			CODEC_EQInit(CODEC_EQ_CH0_TABLE[eq_index], &codec_eq_params);
+
+			codec_eq_params.CODEC_EQChCmd = CODEC_EQ_CH1_DEFAULT_PARAMS[eq_index][0];
+			codec_eq_params.CODEC_EQCoefH0 = CODEC_EQ_CH1_DEFAULT_PARAMS[eq_index][1];
+			codec_eq_params.CODEC_EQCoefB1 = CODEC_EQ_CH1_DEFAULT_PARAMS[eq_index][2];
+			codec_eq_params.CODEC_EQCoefB2 = CODEC_EQ_CH1_DEFAULT_PARAMS[eq_index][3];
+			codec_eq_params.CODEC_EQCoefA1 = CODEC_EQ_CH1_DEFAULT_PARAMS[eq_index][4];
+			codec_eq_params.CODEC_EQCoefA2 = CODEC_EQ_CH1_DEFAULT_PARAMS[eq_index][5];
+			CODEC_EQInit(CODEC_EQ_CH1_TABLE[eq_index], &codec_eq_params);
+	}
+	#endif
+    DBG_DIRECT("Use dual dmic test!");
 }
 
 /**
@@ -112,8 +189,10 @@ void driver_i2s_init(void)
     I2S_InitStruct.I2S_BClockMi         = 0x271;/* <!BCLK = 16K */
     I2S_InitStruct.I2S_BClockNi         = 0x10;
     I2S_InitStruct.I2S_DeviceMode       = I2S_DeviceMode_Master;
-    I2S_InitStruct.I2S_ChannelType      = I2S_Channel_Mono;
+    I2S_InitStruct.I2S_ChannelType      = I2S_Channel_Mono;// TODO:check
     I2S_InitStruct.I2S_DataFormat       = I2S_Mode;
+	
+    I2S_InitStruct.I2S_RxWaterlevel     = 0x4;//add by sc
     I2S_Init(I2S0, &I2S_InitStruct);
 }
 
@@ -135,7 +214,7 @@ void driver_uart_init(void)
     /* change to 3M baudrate */
     UART_InitStruct.UART_Div             = 1;
     UART_InitStruct.UART_Ovsr            = 8;
-    UART_InitStruct.UART_OvsrAdj        = 0x492;
+    UART_InitStruct.UART_OvsrAdj        = 0x292;
     UART_InitStruct.UART_TxWaterLevel    = 12;
 #else
     /* change to 1M baudrate */
@@ -185,6 +264,7 @@ void driver_gdma_init(void)
     NVIC_InitStruct.NVIC_IRQChannelPriority = 1;
     NVIC_InitStruct.NVIC_IRQChannelCmd = ENABLE;
     NVIC_Init(&NVIC_InitStruct);
+
 }
 
 /**
