@@ -130,7 +130,7 @@ void driver_codec_init(void)
     CODEC_InitStruct.CODEC_Ch0Mute = CODEC_CH0_UNMUTE;
     CODEC_InitStruct.CODEC_Ch0MicType = CODEC_CH0_DMIC;
     CODEC_InitStruct.CODEC_Ch0DmicDataLatch = DMIC_Ch0_Falling_Latch;//DMIC_Ch0_Rising_Latch;
-    CODEC_InitStruct.CODEC_Ch0AdGain =  0x0a;  /* 0x2F - 0dB, step 0.375dB, range -17.625dB ~ 30dB */
+    CODEC_InitStruct.CODEC_Ch0AdGain =  0xf0;  /* 0x2F - 0dB, step 0.375dB, range -17.625dB ~ 30dB */
     CODEC_InitStruct.CODEC_Ch0BoostGain = Ch0_Boost_Gain_0dB;
     CODEC_InitStruct.CODEC_Ch0ZeroDetTimeout = Ch0_ADC_Zero_DetTimeout_1024_32_Sample;
 
@@ -138,7 +138,7 @@ void driver_codec_init(void)
     CODEC_InitStruct.CODEC_Ch1Mute = CODEC_CH1_UNMUTE;
     CODEC_InitStruct.CODEC_Ch1MicType = CODEC_CH1_DMIC;
     CODEC_InitStruct.CODEC_Ch1DmicDataLatch = DMIC_Ch1_Rising_Latch;//DMIC_Ch1_Falling_Latch;
-    CODEC_InitStruct.CODEC_Ch1AdGain = 0x0a;  /* 0x2F - 0dB, step 0.375dB, range -17.625dB ~ 30dB */
+    CODEC_InitStruct.CODEC_Ch1AdGain = 0xf0;  /* 0x2F - 0dB, step 0.375dB, range -17.625dB ~ 30dB */
     CODEC_InitStruct.CODEC_Ch1BoostGain = Ch1_Boost_Gain_0dB;
     CODEC_InitStruct.CODEC_Ch1ZeroDetTimeout = Ch1_ADC_Zero_DetTimeout_1024_32_Sample;
 	
