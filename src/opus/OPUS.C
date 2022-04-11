@@ -1,14 +1,24 @@
+#include <stdlib.h>
+#include "trace.h"
+#include "rtl876x_lib_platform.h"
+#include "opus.h"
+#include "opus_custom.h"
+#include "opus_defines.h"
+#include "opus_multistream.h"
+#include "opus_types.h"
+
 
 static OpusEncoder *enc = NULL;
 static int opus_param_frame_size;
 static int opus_param_max_packet;
 
+#define VOICE_PCM_FRAME_TIME_US	20000
+#define VOICE_SAMPLE_RATE 16000
 
-#define VOICE_BITRATE 32000
+#define VOICE_BITRATE 32000		//it is 16k 16bit mono
 #define VOICE_PCM_FRAME_DATA_NUM ((VOICE_SAMPLE_RATE/1000)*VOICE_PCM_FRAME_TIME_US/1000) /* 16*20=320 */
 #define VOICE_COMPRESSION_RATE (16*VOICE_SAMPLE_RATE/VOICE_BITRATE) /* 256000/32000 = 8 */
 
-#define VOICE_SAMPLE_RATE 16000    
 
 void init_encode_param(void)
 {
@@ -27,7 +37,9 @@ void init_encode_param(void)
     int opus_param_packet_loss_perc = 0;
     int opus_param_lsb_depth = 16;
     int opus_param_expert_frame_duration = OPUS_FRAMESIZE_20_MS;
-    
+    int err;
+
+#if 0
 	if ((voice_driver_codec_params.codec_ch0_mute == CODEC_CH0_UNMUTE)
 				&& (voice_driver_codec_params.codec_ch1_mute == CODEC_CH1_MUTE))
     {
@@ -43,7 +55,7 @@ void init_encode_param(void)
         APP_PRINT_ERROR0("[voice_handle_init_encode_param] Invalid codec channels of OPUS!");
         return;
     }
-
+#endif
     opus_param_frame_size = VOICE_PCM_FRAME_DATA_NUM;
     opus_param_max_packet = 1500;
 
@@ -100,7 +112,7 @@ void encode_raw_data(uint8_t *p_input_data, int32_t input_size,
                                   uint8_t *p_output_data, int32_t *p_output_size)
 {
 
-		uint8_t temp_array[4];
+	uint8_t temp_array[4];
     uint32_t enc_final_range;
     int max_payload_bytes = opus_param_max_packet;
 
@@ -117,3 +129,4 @@ void encode_raw_data(uint8_t *p_input_data, int32_t input_size,
 }                                  
 
     
+
